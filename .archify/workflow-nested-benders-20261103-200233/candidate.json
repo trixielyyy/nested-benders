@@ -2,12 +2,29 @@
   "schema_version": 2,
   "diagram_type": "workflow",
   "meta": {
-    "title": "Nested Benders for the Three-Stage Knapsack",
-    "subtitle": "Root master over stage-1 patterns, integer node masters, stage-3 LP subproblems",
-    "animation": "trace",
-    "visual_preset": "blueprint",
+    "title": "Nested Benders for the three-stage knapsack",
+    "subtitle": "Root master, integer node masters, stage-3 LP subproblems",
+    "animation": "none",
+    "visual_preset": "editorial",
     "quality_profile": "showcase",
-    "output": "nested-benders-flow.html"
+    "output": "nested-benders-flow.html",
+    "legend": {
+      "mode": "all",
+      "entries": {
+        "external": {
+          "label": "Instance"
+        },
+        "backend": {
+          "label": "Solver step"
+        },
+        "messagebus": {
+          "label": "Benders cut"
+        },
+        "security": {
+          "label": "Bound check"
+        }
+      }
+    }
   },
   "lanes": [
     {
@@ -20,11 +37,11 @@
     },
     {
       "id": "node",
-      "label": "Node masters, one per stage-2 scenario"
+      "label": "Node masters"
     },
     {
       "id": "sub",
-      "label": "Stage-3 LP subproblems"
+      "label": "Stage-3 LP"
     }
   ],
   "phases": [
@@ -90,7 +107,7 @@
       "id": "rootm",
       "lane": "root",
       "col": 1,
-      "type": "frontend",
+      "type": "backend",
       "label": "Root master",
       "sublabel": "x, w binary, theta free",
       "tag": "stage-1 rows only",
@@ -110,7 +127,7 @@
       "id": "lp",
       "lane": "sub",
       "col": 3,
-      "type": "cloud",
+      "type": "backend",
       "label": "Stage-3 LP",
       "sublabel": "one per s in S(lambda)",
       "tag": "dual point from Pi",
@@ -148,7 +165,7 @@
       "id": "done",
       "lane": "driver",
       "col": 5,
-      "type": "security",
+      "type": "backend",
       "icon": "success",
       "label": "Certified optimum",
       "sublabel": "x-hat and its true cost",
@@ -236,7 +253,7 @@
   ],
   "cards": [
     {
-      "dot": "cyan",
+      "dot": "slate",
       "title": "Why the node stays integer",
       "items": [
         "Stage-2 y is binary in every instance, upper bound 1",
@@ -245,7 +262,7 @@
       ]
     },
     {
-      "dot": "amber",
+      "dot": "slate",
       "title": "Why the root cut is valid",
       "items": [
         "It claims one value at one pattern and nothing elsewhere",
@@ -254,7 +271,7 @@
       ]
     },
     {
-      "dot": "rose",
+      "dot": "slate",
       "title": "What it costs",
       "items": [
         "One row per node per outer iteration",

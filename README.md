@@ -3,6 +3,11 @@
 Status: **prototype, not executed.** The code builds. No run is verified. The
 extensive sweep holds the Gurobi WLS license, so this directory starts no run.
 
+Repository: `github.com/trixielyyy/nested-benders` (private, `main`).
+Diagram: `nested-benders-flow.html`, generated from
+`.archify/workflow-nested-benders-20261103-200233/candidate.json`.
+Change log: `PROGRESS.md`.
+
 ## 1. Can nested Benders solve this problem?
 
 The question is about convexity, not about the code.
@@ -33,7 +38,8 @@ Three options are open.
 
 **Option A: relax stage-2 integrality.** The node becomes an LP. The value
 function becomes convex and the cuts become valid. The bound converges to the
-LP relaxation, not to the MIP optimum. The prototype implements this option.
+LP relaxation, not to the MIP optimum. The prototype keeps this as its
+`--relaxed` fallback.
 
 **Option B: keep `y` in the master.** This is standard Benders, and
 `knapsack/` already runs it. The nesting disappears, because no integer
@@ -48,10 +54,10 @@ Three schemes appear in the literature. They differ in what they remove and
 what they cost.
 
 **Integer optimality cut (Laporte and Louveaux).**
-`theta >= V* - M (1 - delta)`, where `delta` is a binary that equals one only
-at the incumbent pair `(x, y)`. The cut is valid and exact. It needs one
-`delta` binary and one big-M value per cut. It converges slowly. The big-M
-value carries numerical risk when objective ranges are large.
+`theta >= V - M d(x, x_hat)`, where `d(x, x_hat)` counts the stage-1
+coordinates that differ. At `x = x_hat` the cut states one proven number. One
+deviation makes it vacuous. No auxiliary binary is needed. The code uses
+`M = V`, which is valid while every cost coefficient is nonnegative.
 
 **No-good cut on `y`.**
 The cut forbids the current node pattern:
@@ -107,9 +113,9 @@ every stage-3 subproblem at the node solution, adds the violated cuts, and solve
 node again. That is Benders on the node, with the node master carrying integer `y`.
 When no cut is violated, the node value `V_lambda(x_hat)` is exact.
 
-The root cut is an integer optimality cut. Each cut adds one binary `delta`, forces
-`delta = 1` only when `x = x_hat`, and states `theta_lambda >= V_lambda(x_hat)` under
-that indicator. The cut claims nothing at other `x`, so it needs no convexity.
+The root cut is an integer optimality cut in big-M form:
+`theta_lambda >= V_lambda(x_hat) - M d(x, x_hat)`. At `x = x_hat` it states one
+proven number. One deviation makes it vacuous, so it needs no convexity.
 
 **Relaxed mode (`--relaxed`).** The node is an LP. The root cut is the usual
 subgradient cut. The bound converges to the LP relaxation.
