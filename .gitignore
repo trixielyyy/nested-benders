@@ -1,0 +1,7 @@
+# build artifact
+nested_benders
+
+# archify receipts (the candidate and the HTML are tracked)
+.archify/*/*.finalize-summary.json
+.archify/*/*.finalize.json
+.archify/*/*.browser-check.json

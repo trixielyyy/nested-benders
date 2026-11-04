@@ -1,0 +1,266 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Nested Benders for the Three-Stage Knapsack",
+    "subtitle": "Root master over stage-1 patterns, integer node masters, stage-3 LP subproblems",
+    "animation": "trace",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "output": "nested-benders-flow.html"
+  },
+  "lanes": [
+    {
+      "id": "driver",
+      "label": "Driver"
+    },
+    {
+      "id": "root",
+      "label": "Root master"
+    },
+    {
+      "id": "node",
+      "label": "Node masters, one per stage-2 scenario"
+    },
+    {
+      "id": "sub",
+      "label": "Stage-3 LP subproblems"
+    }
+  ],
+  "phases": [
+    {
+      "id": "solve",
+      "label": "Solve down the tree",
+      "fromCol": 1,
+      "toCol": 3,
+      "variant": "emphasis"
+    },
+    {
+      "id": "cut",
+      "label": "Return cuts",
+      "fromCol": 4,
+      "toCol": 4
+    },
+    {
+      "id": "certify",
+      "label": "Certify",
+      "fromCol": 5,
+      "toCol": 5,
+      "variant": "dashed"
+    }
+  ],
+  "groups": [
+    {
+      "id": "inner_loop",
+      "label": "Inner loop, per node",
+      "lane": "node",
+      "fromCol": 2,
+      "toCol": 4,
+      "variant": "emphasis"
+    },
+    {
+      "id": "outer_loop",
+      "label": "Outer loop, one new pattern",
+      "lane": "root",
+      "fromCol": 1,
+      "toCol": 4,
+      "variant": "dashed"
+    }
+  ],
+  "mainPath": [
+    "start",
+    "rootm",
+    "nodem",
+    "cutroot",
+    "term",
+    "done"
+  ],
+  "nodes": [
+    {
+      "id": "start",
+      "lane": "driver",
+      "col": 0,
+      "type": "external",
+      "icon": "start",
+      "label": "Instance",
+      "sublabel": "3-stage MPS + scenario tree",
+      "width": 150
+    },
+    {
+      "id": "rootm",
+      "lane": "root",
+      "col": 1,
+      "type": "frontend",
+      "label": "Root master",
+      "sublabel": "x, w binary, theta free",
+      "tag": "stage-1 rows only",
+      "width": 150
+    },
+    {
+      "id": "nodem",
+      "lane": "node",
+      "col": 2,
+      "type": "backend",
+      "label": "Node master MIP",
+      "sublabel": "y integer, psi_s per s",
+      "tag": "x fixed at x-hat",
+      "width": 150
+    },
+    {
+      "id": "lp",
+      "lane": "sub",
+      "col": 3,
+      "type": "cloud",
+      "label": "Stage-3 LP",
+      "sublabel": "one per s in S(lambda)",
+      "tag": "dual point from Pi",
+      "width": 150
+    },
+    {
+      "id": "cutnode",
+      "lane": "node",
+      "col": 4,
+      "type": "messagebus",
+      "label": "Stage-3 cut",
+      "sublabel": "psi_s >= psi.(e - E x - F y)",
+      "width": 150
+    },
+    {
+      "id": "cutroot",
+      "lane": "root",
+      "col": 4,
+      "type": "messagebus",
+      "label": "Integer optimality cut",
+      "sublabel": "theta >= V - M d(x, x-hat)",
+      "width": 150
+    },
+    {
+      "id": "term",
+      "lane": "driver",
+      "col": 4,
+      "type": "security",
+      "icon": "decision",
+      "label": "Bound check",
+      "sublabel": "root value >= current cost?",
+      "width": 150
+    },
+    {
+      "id": "done",
+      "lane": "driver",
+      "col": 5,
+      "type": "security",
+      "icon": "success",
+      "label": "Certified optimum",
+      "sublabel": "x-hat and its true cost",
+      "width": 150
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-start-root",
+      "from": "start",
+      "to": "rootm",
+      "label": "build",
+      "variant": "default",
+      "role": "main"
+    },
+    {
+      "id": "e-root-node",
+      "from": "rootm",
+      "to": "nodem",
+      "label": "x-hat",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "id": "e-node-lp",
+      "from": "nodem",
+      "to": "lp",
+      "label": "y-hat",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "id": "e-lp-cut",
+      "from": "lp",
+      "to": "cutnode",
+      "label": "phi_s > psi_s",
+      "variant": "security",
+      "role": "branch"
+    },
+    {
+      "id": "e-cut-node",
+      "from": "cutnode",
+      "to": "nodem",
+      "label": "re-solve",
+      "variant": "dashed",
+      "role": "return",
+      "labelSegment": 1
+    },
+    {
+      "id": "e-node-root",
+      "from": "nodem",
+      "to": "cutroot",
+      "label": "no violation: V exact",
+      "variant": "emphasis",
+      "role": "main",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e-root-term",
+      "from": "cutroot",
+      "to": "term",
+      "label": "lower and upper bound",
+      "variant": "default",
+      "role": "main",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "e-term-root",
+      "from": "term",
+      "to": "rootm",
+      "label": "not certified",
+      "variant": "dashed",
+      "role": "return"
+    },
+    {
+      "id": "e-term-done",
+      "from": "term",
+      "to": "done",
+      "label": "certified",
+      "variant": "emphasis",
+      "role": "branch"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Why the node stays integer",
+      "items": [
+        "Stage-2 y is binary in every instance, upper bound 1",
+        "The node is a MIP, so V_lambda(x-hat) is exact at that pattern",
+        "Stage-3 stays continuous, so its dual point is an extreme point"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Why the root cut is valid",
+      "items": [
+        "It claims one value at one pattern and nothing elsewhere",
+        "M = V is safe because every cost coefficient is nonnegative",
+        "No auxiliary binary is needed in the big-M form"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What it costs",
+      "items": [
+        "One row per node per outer iteration",
+        "Worst case visits every stage-1 pattern",
+        "Relaxed mode returns a lower bound only"
+      ]
+    }
+  ]
+}
